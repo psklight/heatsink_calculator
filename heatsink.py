@@ -133,7 +133,7 @@ class HeatsinkBasicwFinNumber:
 
 class Heatsink:
 
-    def __init__(self, heatsink, fluid):
+    def __init__(self, heatsink, fluid=air):
         self.heatsink = heatsink
         self.fluid = fluid
 
