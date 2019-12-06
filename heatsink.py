@@ -11,6 +11,69 @@ def nusselt(reynolds, prandtl):
 
 class HeatsinkBasic:
 
+    def __init__(self, base_width, base_height, base_k, fin_height, fin_width, fin_gap, fin_k, length):
+        self.base_width = base_width
+        self.base_height = base_height
+        self.base_k = base_k
+        self.fin_height = fin_height
+        self.fin_width = fin_width
+        self.fin_k = fin_k
+        self.fin_gap = fin_gap
+        self.length = length
+
+    @property
+    def fin_number(self):
+        n = np.floor(self.base_width / (self.fin_gap + self.fin_width))
+        left_over = self.base_width - n * (self.fin_gap + self.fin_width)
+        if left_over >= self.fin_width:
+            n += 1
+        return int(n)
+
+    @property
+    def base_exposed_surface(self):
+        return self.fin_gap * self.length
+
+    @property
+    def fin_exposed_surface(self):
+        return 2.0 * self.fin_height * self.length
+
+    @property
+    def flow_area(self):
+        return self.fin_gap * self.fin_height
+
+    @property
+    def base_thermal_resistance(self):
+        return self.base_height / self.base_k / self.base_width / self.length
+
+    @property
+    def free_area_ratio(self):
+        return 1 - self.fin_width * self.fin_number / self.base_width
+
+    @property
+    def flow_contraction_coeff(self):
+        free_area_ratio = self.free_area_ratio
+        return 0.42 * (1 - free_area_ratio ** 2)
+
+    @property
+    def flow_expansion_coeff(self):
+        free_area_ratio = self.free_area_ratio
+        return (1 - free_area_ratio ** 2) ** 2
+
+    @property
+    def hydraulic_diameter(self):
+        """
+        https://www.electronics-cooling.com/2003/05/estimating-parallel-plate-fin-heat-sink-pressure-drop/
+        Dh ~ 2*fin_gap
+        """
+        return 2 * self.fin_gap
+
+    @property
+    def flow_aspect_ratio(self):
+        return self.fin_gap / self.fin_height
+
+
+class HeatsinkBasicwFinNumber:
+
     def __init__(self, base_width, base_height, base_k, fin_height, fin_width, fin_k, fin_number, length):
         self.base_width = base_width
         self.base_height = base_height
