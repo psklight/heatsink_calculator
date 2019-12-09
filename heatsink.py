@@ -31,7 +31,7 @@ class HeatsinkBasic:
 
     @property
     def base_exposed_surface(self):
-        return self.fin_gap * self.length
+        return (self.base_width - self.fin_width*self.fin_number) * self.length
 
     @property
     def fin_exposed_surface(self):
@@ -39,7 +39,7 @@ class HeatsinkBasic:
 
     @property
     def flow_area(self):
-        return self.fin_gap * self.fin_height
+        return (self.base_width - self.fin_number*self.fin_width) * self.fin_height
 
     @property
     def base_thermal_resistance(self):
@@ -243,3 +243,15 @@ class Heatsink:
         K = (fluid.density * velocity ** 2) / 2 * correction_factor
         return self.pressure_drop_coeff(velocity) * K
 
+def heatsink_from_config(config, fluid=air):
+    hsb = HeatsinkBasic(base_width=config['base width'],
+             base_height=config['base height'],
+             base_k=config['base k'],
+             fin_height=config['fin height'],
+             fin_width=config['fin width'],
+             fin_k=config['fin k'],
+             fin_gap=config['fin gap'],
+             length=config['length'])
+
+    hs = Heatsink(heatsink=hsb, fluid=fluid)
+    return hs
