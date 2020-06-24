@@ -22,6 +22,13 @@ class HeatsinkBasic:
         self.length = length
 
     @property
+    def fin_corrected_height(self):
+        """
+        From Cengel's Intro to Thermodynamics and Heat Transfer, Chapter 10. For rectangular fins.
+        """
+        return self.fin_height + self.fin_width/2
+
+    @property
     def fin_number(self):
         n = np.floor(self.base_width / (self.fin_gap + self.fin_width))
         left_over = self.base_width - n * (self.fin_gap + self.fin_width)
@@ -157,20 +164,36 @@ class Heatsink:
     def flow_rate(self, velocity=1e-10):
         return velocity * self.heatsink.flow_area
 
-    def fin_eff(self, velocity=1e-10):
-        h = self.convection_coeff(velocity)
+    def fin_efficiency(self, velocity=1e-10):
         heatsink = self.heatsink
-        m = np.sqrt(2 * h / heatsink.fin_k / heatsink.fin_width)
+        m = self.m(velocity)
         fin_height = heatsink.fin_height
         eff = np.tanh(m * fin_height) / (m * fin_height)
         return eff
 
+    def tanhmL(self, velocity=1e-10):
+        m = self.m(velocity)
+        L = self.heatsink.fin_height
+        return np.tanh(m*L)
+
+    def m(self, velocity=1e-10):
+        """
+        m = sqrt(2h/kt) from Cengel's Intro to Thermodynamics and Heat Transfer, Chapter 10. For rectangular fins.
+        """
+        h = self.convection_coeff(velocity)
+        heatsink = self.heatsink
+        m = np.sqrt(2 * h / heatsink.fin_k / heatsink.fin_width)
+        return m
+
     def thermal_resistance(self, velocity=1e-10):
+        """
+        https://www.electronics-cooling.com/2003/02/estimating-parallel-plate-fin-heat-sink-thermal-resistance/
+        """
         h = self.convection_coeff(velocity)
         heatsink = self.heatsink
         base_area = heatsink.base_exposed_surface
         fin_area = heatsink.fin_exposed_surface
-        fin_eff = self.fin_eff(velocity)
+        fin_eff = self.fin_efficiency(velocity)
         fin_number = heatsink.fin_number
         conductivity = h * (base_area + fin_number * fin_eff * fin_area)
         return 1.0 / conductivity + heatsink.base_thermal_resistance
